@@ -1,0 +1,27 @@
+# Python
+.venv/
+__pycache__/
+*.pyc
+.pytest_cache/
+.ruff_cache/
+.ipynb_checkpoints/
+
+# Secrets: never commit
+.env
+.env.*
+!.env.example
+
+# Generated data and model files
+data/
+mlartifacts/
+mlruns/
+*.db
+*.sqlite
+
+# Local state of tools
+.prefect/
+
+# OS and editor
+.DS_Store
+Thumbs.db
+.vscode/

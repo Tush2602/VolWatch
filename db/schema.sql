@@ -1,0 +1,10 @@
+CREATE TABLE IF NOT EXISTS prices(
+    ticker TEXT NOT NULL,
+    trade_date DATE NOT NULL,
+    open DOUBLE PRECISION NOT NULL,
+    high DOUBLE PRECISION NOT NULL,
+    low DOUBLE PRECISION NOT NULL,
+    close DOUBLE PRECISION NOT NULL,
+    ingested_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+    PRIMARY KEY (ticker, trade_date)
+);

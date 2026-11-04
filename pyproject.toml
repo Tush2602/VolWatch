@@ -1,0 +1,43 @@
+[project]
+name = "volwatch"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+requires-python = ">=3.10"
+dependencies = [
+    "dotenv>=0.9.9",
+    "ipykernel>=7.3.0",
+    "numpy>=2.2.6",
+    "openpyxl>=3.1.5",
+    "pandas>=2.3.3",
+    "psycopg[binary]>=3.3.6",
+    "pytest>=9.1.1",
+    "requests>=2.34.2",
+    "scikit-learn>=1.7.2",
+    "tzdata>=2026.5",
+    "xgboost>=3.2.0",
+    "yfinance>=1.7.0",
+    "torch==2.7.0",
+    "torchvision==0.22.0",
+    "torchaudio==2.7.0",
+    "arch>=8.0.0",
+    "mlflow>=3.17.1",
+    "psycopg2-binary>=2.9.13",
+    "scipy>=1.15.3",
+    "prefect>=3.8.8",
+    "fastapi>=0.150.0",
+    "uvicorn>=0.54.0",
+    "httpx>=0.28.1",
+]
+
+[tool.uv.sources]
+torch = { index = "pytorch-cu118" }
+torchvision = { index = "pytorch-cu118" }
+torchaudio = { index = "pytorch-cu118" }
+
+[[tool.uv.index]]
+name = "pytorch-cu118"
+url = "https://download.pytorch.org/whl/cu118"
+explicit = true
+
+filterwarnings = ["ignore:The ``noload`` loader strategy:DeprecationWarning"]

@@ -1,0 +1,6 @@
+fastapi
+uvicorn
+pandas
+numpy
+psycopg[binary]
+python-dotenv
