@@ -70,16 +70,6 @@ class Database:
         with self._connect() as conn:
             return conn.execute(f"SELECT count(*) FROM prices WHERE ticker = %s", (ticker, )).fetchone()[0]
 
-    def save_forecast(self, ticker: str, as_of_date, model_version: int, forecast_vol: float) -> None:
-        sql = """
-            INSERT INTO forecasts (ticker, as_of_date, model_version, forecast_vol)
-            VALUES (%s, %s, %s, %s)
-            ON CONFLICT (ticker, as_of_date) DO UPDATE
-            SET model_version = EXCLUDED.model_version, forecast_vol = EXCLUDED.forecast_vol, created_at = now()
-        """
-        with self._connect() as conn:
-            conn.execute(sql, (ticker, pd.Timestamp(as_of_date).date(), int(model_version), float(forecast_vol)))
-
     def save_decision(self, as_of_date, retrain: bool, details: dict) -> None:
         sql = """
             INSERT INTO monitoring_decisions (as_of_date, retrain, details)
@@ -119,15 +109,33 @@ class Database:
             value = conn.execute("SELECT MAX(as_of_date) FROM monitoring_decisions WHERE retrain").fetchone()[0]
         return pd.Timestamp(value) if value else None
 
-    def read_forecasts(self, ticker: str, limit: int = 60) -> pd.DataFrame:
-        sql = """
-            SELECT as_of_date, model_version, forecast_vol FROM forecasts
-            WHERE ticker = %s ORDER BY as_of_date DESC LIMIT %s
+    def save_forecast(self, ticker: str, as_of_date, model_version: int, forecast_vol: float,
+                      source: str = "live", overwrite: bool = True) -> None:
+        conflict = (
+            "DO UPDATE SET model_version = EXCLUDED.model_version, forecast_vol = EXCLUDED.forecast_vol, "
+            "source = EXCLUDED.source, created_at = now()"
+            if overwrite else "DO NOTHING"
+        )
+        sql = f"""
+            INSERT INTO forecasts (ticker, as_of_date, model_version, forecast_vol, source)
+            VALUES (%s, %s, %s, %s, %s)
+            ON CONFLICT (ticker, as_of_date) {conflict}
         """
         with self._connect() as conn:
-            rows = conn.execute(sql, (ticker, limit)).fetchall()
-        return pd.DataFrame(rows, columns=["as_of_date", "model_version", "forecast_vol"])
-            
+            conn.execute(sql, (ticker, pd.Timestamp(as_of_date).date(), int(model_version),
+                               float(forecast_vol), source))
+
+    def read_forecasts(self, ticker: str, limit: int = 60, source: str | None = None) -> pd.DataFrame:
+        sql = "SELECT as_of_date, model_version, forecast_vol, source FROM forecasts WHERE ticker = %s"
+        params = [ticker]
+        if source is not None:
+            sql += " AND source = %s"
+            params.append(source)
+        sql += " ORDER BY as_of_date DESC LIMIT %s"
+        params.append(limit)
+        with self._connect() as conn:
+            rows = conn.execute(sql, params).fetchall()
+        return pd.DataFrame(rows, columns=["as_of_date", "model_version", "forecast_vol", "source"])
 
     
 

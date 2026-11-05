@@ -6,7 +6,7 @@ from api.app import create_app
 from api.service import ForecastService
 
 NOW = pd.Timestamp("2026-10-31 12:00", tz="UTC")   # 17:30 IST on 31 Oct
-EMPTY = pd.DataFrame(columns=["as_of_date", "model_version", "forecast_vol"])
+EMPTY = pd.DataFrame(columns=["as_of_date", "model_version", "forecast_vol", "source"])
 
 
 class FakeDB:
@@ -14,10 +14,13 @@ class FakeDB:
         self.forecasts, self.prices = forecasts, prices
         self.last_run, self.success_run, self.retrain = last_run, success_run, retrain
 
-    def read_forecasts(self, ticker, limit=60):
+    def read_forecasts(self, ticker, limit=60, source=None):
         if ticker != "^NSEI" or self.forecasts is None:
             return EMPTY
-        return self.forecasts.sort_values("as_of_date", ascending=False).head(limit).reset_index(drop=True)
+        df = self.forecasts
+        if source is not None:
+            df = df[df["source"] == source]
+        return df.sort_values("as_of_date", ascending=False).head(limit).reset_index(drop=True)
 
     def read_prices(self, ticker, since=None):
         return self.prices
@@ -41,11 +44,12 @@ def make_client(db):
     return TestClient(create_app(service), raise_server_exceptions=False)
 
 
-def make_forecasts(dates, values):
+def make_forecasts(dates, values, source="live"):
     return pd.DataFrame({
         "as_of_date": [d.date() for d in pd.to_datetime(dates)],
         "model_version": 1,
         "forecast_vol": values,
+        "source": source,
     })
 
 
@@ -147,7 +151,18 @@ def test_health_does_not_touch_the_database():
     assert make_client(BrokenDB()).get("/health").json() == {"status": "ok"}
 
 
+def test_predict_ignores_backfilled_rows():
+    rows = pd.concat([make_forecasts(["2026-10-29"], [9.0]),
+                      make_forecasts(["2026-10-30"], [99.0], source="backfill")], ignore_index=True)
+    body = make_client(FakeDB(forecasts=rows)).get("/predict").json()
+    assert body["forecast_vol"] == 9.0
+    assert body["source"] == "live"
 
-'''
-postgresql://neondb_owner:npg_vLAohQ0TmcW3@ep-delicate-tree-b56ex6jk-pooler.c-7.us-east-2.aws.neon.tech/neondb?sslmode=require&channel_binding=require
-'''
+
+def test_history_labels_each_point_with_its_source():
+    prices = pd.DataFrame({"High": 102.0, "Low": 100.0}, index=pd.bdate_range("2026-10-26", "2026-10-30"))
+    rows = pd.concat([make_forecasts(["2026-10-28"], [10.0], source="backfill"),
+                      make_forecasts(["2026-10-29"], [11.0])], ignore_index=True)
+    points = make_client(FakeDB(forecasts=rows, prices=prices)).get("/history").json()
+    assert [p["source"] for p in points] == ["backfill", "live"]
+

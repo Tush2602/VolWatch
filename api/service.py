@@ -19,7 +19,7 @@ class ForecastService:
         return self.now().tz_convert("Asia/Kolkata").tz_localize(None).normalize()
 
     def latest(self, ticker: str) -> dict | None:
-        df = self.db.read_forecasts(ticker, limit=1)
+        df = self.db.read_forecasts(ticker, limit=1, source="live")
         if df.empty:
             return None
         row = df.iloc[0]
@@ -36,7 +36,7 @@ class ForecastService:
         }
 
     def history(self, ticker: str, limit: int = 30) -> list:
-        forecasts = self.db.read_forecasts(ticker, limit=limit)
+        forecasts = self.db.read_forecasts(ticker, limit=limit, source=str(row['source']))
         if forecasts.empty:
             return []
         forecasts = forecasts.copy()

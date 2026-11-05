@@ -11,8 +11,11 @@ class InMemoryStore:
         self.decisions = {}
         self.runs = []
 
-    def save_forecast(self, ticker, as_of_date, model_version, forecast_vol) -> None:
-        self.forecasts[(ticker, pd.Timestamp(as_of_date))] = (int(model_version), float(forecast_vol))
+    def save_forecast(self, ticker, as_of_date, model_version, forecast_vol, source="live", overwrite=True) -> None:
+        key = (ticker, pd.Timestamp(as_of_date))
+        if key in self.forecasts and not overwrite:
+            return
+        self.forecasts[key] = (int(model_version), float(forecast_vol), source)
 
     def save_decision(self, as_of_date, retrain, details) -> None:
         self.decisions[pd.Timestamp(as_of_date)] = (bool(retrain), json.dumps(details, default=str))

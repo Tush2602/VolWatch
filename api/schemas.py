@@ -11,6 +11,7 @@ class ForecastOut(BaseModel):
     age_days: int
     stale: bool
     note: str
+    source: str
 
 
 class HistoryPoint(BaseModel):
@@ -18,3 +19,4 @@ class HistoryPoint(BaseModel):
     forecast_vol: float
     realized_vol: float | None
     model_version: int
+    source: str
