@@ -1,0 +1,14 @@
+{
+  "period": "2020-01-01 to 2026-10-14",
+  "n_days": 1679,
+  "target": "next-day range-based volatility, annualized %",
+  "note": "Scored once on a sealed test set. Lower is better for all three metrics.",
+  "models": [
+    {"model": "Persistence (tomorrow = today)", "kind": "naive",       "rmse": 7.632, "mae": 4.485, "qlike": 0.795},
+    {"model": "EWMA (0.94)",                    "kind": "statistical", "rmse": 7.203, "mae": 4.361, "qlike": 0.460},
+    {"model": "GARCH(1,1), rescaled",           "kind": "statistical", "rmse": 7.151, "mae": 4.407, "qlike": 0.427},
+    {"model": "LSTM (5-seed average)",          "kind": "neural",      "rmse": 6.750, "mae": 3.766, "qlike": 0.420},
+    {"model": "XGBoost (deployed)",             "kind": "deployed",    "rmse": 6.473, "mae": 3.707, "qlike": 0.408},
+    {"model": "India VIX, rescaled",            "kind": "benchmark",   "rmse": 6.427, "mae": 3.872, "qlike": 0.386}
+  ]
+}
