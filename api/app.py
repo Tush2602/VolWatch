@@ -42,4 +42,5 @@ def create_app(service) -> FastAPI:
         return JSONResponse(status_code=503, content={"detail": "service temporarily unavailable"},
                             headers={"Retry-After": "30"})
 
+    
     return app

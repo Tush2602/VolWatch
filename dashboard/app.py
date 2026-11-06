@@ -41,6 +41,9 @@ except ApiUnavailable:
     st.stop()
 
 predict, history, status = data["predict"], data["history"], data["status"]
+if history and "source" not in history[0]:
+    st.error("The API is running an older version than this dashboard expects. Please try again shortly.")
+    st.stop()
 
 # ---- headline ----
 if predict is None:

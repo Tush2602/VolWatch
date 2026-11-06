@@ -30,13 +30,14 @@ class ForecastService:
             "as_of_date": as_of.date(),
             "forecast_vol": round(float(row["forecast_vol"]), 3),
             "model_version": int(row["model_version"]),
+            "source": "live",
             "age_days": age,
             "stale": age > self.stale_after_days,
             "note": self.NOTE,
         }
 
     def history(self, ticker: str, limit: int = 30) -> list:
-        forecasts = self.db.read_forecasts(ticker, limit=limit, source=str(row['source']))
+        forecasts = self.db.read_forecasts(ticker, limit=limit)
         if forecasts.empty:
             return []
         forecasts = forecasts.copy()
@@ -60,6 +61,7 @@ class ForecastService:
                 "forecast_vol": round(float(row["forecast_vol"]), 3),
                 "realized_vol": actual,
                 "model_version": int(row["model_version"]),
+                "source": str(row["source"]),
             })
         return points
 
