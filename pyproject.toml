@@ -33,13 +33,19 @@ dependencies = [
 ]
 
 [tool.uv.sources]
-torch = { index = "pytorch-cu118" }
-torchvision = { index = "pytorch-cu118" }
-torchaudio = { index = "pytorch-cu118" }
+torch = [
+  { index = "pytorch-cu118", marker = "sys_platform == 'win32'" },
+  { index = "pytorch-cpu", marker = "sys_platform == 'linux'" },
+]
 
 [[tool.uv.index]]
 name = "pytorch-cu118"
 url = "https://download.pytorch.org/whl/cu118"
+explicit = true
+
+[[tool.uv.index]]
+name = "pytorch-cpu"
+url = "https://download.pytorch.org/whl/cpu"
 explicit = true
 
 filterwarnings = ["ignore:The ``noload`` loader strategy:DeprecationWarning"]
