@@ -1,4 +1,5 @@
 import pandas as pd 
+import sys
 
 from db.client import Database
 from features.build_features import FeatureBuilder
@@ -37,6 +38,9 @@ def main() -> None:
     version = registry.version_for_run(run_id)
     registry.set_version_tag(version, "fit_end", str(fit_data.index.max().date()))
     promoted = registry.promote_if_better(version, metric="test_qlike")
+    if "--force" in sys.argv and not promoted:
+        registry.set_champion(version)
+        print(f"forced version {version} to champion")
     print({k:round(v, 2) for k, v in scores.items()})
     print(f"registerd {MODEL_NAME} version {version}; promoted to champion : {promoted}")
 

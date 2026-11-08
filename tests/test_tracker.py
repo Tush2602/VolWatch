@@ -29,3 +29,25 @@ def test_missing_uri_fails_loudly(monkeypatch):
     monkeypatch.delenv("MLFLOW_TRACKING_URI", raising=False)
     with pytest.raises(RuntimeError):
         ExperimentTracker(tracking_uri=None)
+
+def test_artifact_root_from_the_environment_is_used_for_new_experiments(tmp_path, monkeypatch):
+    monkeypatch.setenv("MLFLOW_ARTIFACT_ROOT", "s3://example-bucket/mlflow")
+    uri = f"sqlite:///{(tmp_path / 'mlflow.db').as_posix()}"
+    tracker = ExperimentTracker("env-exp", tracking_uri=uri)
+    location = tracker.client.get_experiment(tracker.experiment_id).artifact_location
+    assert location.startswith("s3://example-bucket/mlflow")
+
+
+def test_explicit_artifact_dir_beats_the_environment(tmp_path, monkeypatch):
+    monkeypatch.setenv("MLFLOW_ARTIFACT_ROOT", "s3://example-bucket/mlflow")
+    uri = f"sqlite:///{(tmp_path / 'mlflow.db').as_posix()}"
+    tracker = ExperimentTracker("local-exp", tracking_uri=uri, artifact_dir=str(tmp_path / "art"))
+    assert tracker.client.get_experiment(tracker.experiment_id).artifact_location.startswith("file:")
+
+
+def test_experiment_name_comes_from_the_environment(tmp_path, monkeypatch):
+    monkeypatch.setenv("MLFLOW_EXPERIMENT_NAME", "named-by-env")
+    uri = f"sqlite:///{(tmp_path / 'mlflow.db').as_posix()}"
+    tracker = ExperimentTracker(tracking_uri=uri, artifact_dir=str(tmp_path / "art"))
+    assert tracker.experiment_name == "named-by-env"
+    
