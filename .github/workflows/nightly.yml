@@ -1,0 +1,37 @@
+name: Nightly pipeline
+
+on:
+  schedule:
+    - cron: "30 12 * * 1-5"   # 12:30 UTC = 18:00 IST, Monday to Friday
+  workflow_dispatch:
+    inputs:
+      force_retrain:
+        description: "Run a challenger trial even if nothing triggered"
+        type: boolean
+        default: false
+
+permissions:
+  contents: read
+
+concurrency:
+  group: nightly-pipeline
+  cancel-in-progress: false
+
+jobs:
+  run:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    env:
+      DATABASE_URL: ${{ secrets.PIPELINE_DATABASE_URL }}
+      MLFLOW_TRACKING_URI: ${{ secrets.MLFLOW_TRACKING_URI }}
+      MLFLOW_EXPERIMENT_NAME: volwatch-prod
+      MLFLOW_ARTIFACT_ROOT: s3://volwatch-models/mlflow
+      AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+      AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+      AWS_ENDPOINT_URL_S3: ${{ secrets.AWS_ENDPOINT_URL_S3 }}
+      AWS_REGION: ${{ secrets.AWS_REGION }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v5
+      - run: uv sync --frozen
+      - run: uv run python -m flows.nightly ${{ inputs.force_retrain && '--force-retrain' || '' }}
