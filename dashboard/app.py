@@ -53,9 +53,12 @@ else:
     c1.metric("Next-session volatility", f"{predict['forecast_vol']:.1f}%",
               help="Range-based estimate from the day's high and low, annualized, in the same units as India VIX.")
     c2.metric("Forecast issued", predict["as_of_date"])
+    st.caption("This is the model's forecast for the next trading session after that date. "
+               "The dashboard updates on weekdays after the market closes (about 18:00 IST).")
     c3.metric("Model version", f"v{predict['model_version']}")
     c4.metric("Freshness", "Stale" if predict["stale"] else "Fresh",
               delta=f"{predict['age_days']} days old", delta_color="off")
+
 
 # ---- history ----
 st.subheader("Recent forecasts vs what happened")
